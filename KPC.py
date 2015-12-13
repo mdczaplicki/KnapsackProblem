@@ -116,7 +116,6 @@ class KnapsackEvolutionaryCrossover:
             f_out.writelines("\n".join(["%5i %5i %s" % (n, x['fitness'], ''.join(str(x['dna']))) for x in genetic_pool]))
             f_out.write("\n\n")
 
-
             parent_1 = random_parent(genetic_pool)
             parent_2 = random_parent(genetic_pool)
 

@@ -47,8 +47,10 @@ class MatplotlibWidget(QtWidgets.QWidget):
         self.canvas = FigureCanvasQTAgg(self.figure)
 
         self.axis = self.figure.add_subplot(111)
-        self.figure.tight_layout()
+        # self.figure.tight_layout()
         self.axis.grid(color='#AAAAAA', which='major', linestyle='-', linewidth=0.5)
+        self.axis.set_xlabel("Evolution")
+        self.axis.set_ylabel("Value")
 
         self.layoutVertical = QtWidgets.QVBoxLayout(self)
         self.layoutVertical.addWidget(self.canvas)
@@ -212,6 +214,24 @@ class UiKnapsackProblem(QtWidgets.QWidget):
         self.source_edit.setObjectName("source_edit")
         self.gridLayout_3.addWidget(self.source_edit, 13, 1, 1, 1)
 
+        self.destination_label = QtWidgets.QLabel(self.central_widget)
+        self.destination_label.setMaximumSize(QtCore.QSize(50, 16777215))
+        self.destination_label.setTextFormat(QtCore.Qt.AutoText)
+        self.destination_label.setWordWrap(True)
+        self.destination_label.setObjectName("source_label")
+        self.gridLayout_3.addWidget(self.destination_label, 14, 0, 1, 1)
+
+        self.destination_edit = QtWidgets.QLineEdit(self.central_widget)
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        size_policy.setHorizontalStretch(0)
+        size_policy.setVerticalStretch(0)
+        size_policy.setHeightForWidth(self.source_edit.sizePolicy().hasHeightForWidth())
+        self.destination_edit.setSizePolicy(size_policy)
+        self.destination_edit.setMaximumSize(QtCore.QSize(100, 16777215))
+        self.destination_edit.setObjectName("source_edit")
+        self.destination_edit.setValidator(QtGui.QIntValidator(0, 999))
+        self.gridLayout_3.addWidget(self.destination_edit, 14, 1, 1, 1)
+
         self.eval_button = QtWidgets.QPushButton(self.central_widget)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         size_policy.setHorizontalStretch(0)
@@ -220,11 +240,11 @@ class UiKnapsackProblem(QtWidgets.QWidget):
         self.eval_button.setSizePolicy(size_policy)
         self.eval_button.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.eval_button.setObjectName("eval_button")
-        self.gridLayout_3.addWidget(self.eval_button, 14, 0, 1, 2)
+        self.gridLayout_3.addWidget(self.eval_button, 15, 0, 1, 2)
 
         self.matplotlib_widget = MatplotlibWidget(self.central_widget)
         self.matplotlib_widget.setObjectName("matplotlib_widget")
-        self.gridLayout_3.addWidget(self.matplotlib_widget, 0, 2, 15, 1)
+        self.gridLayout_3.addWidget(self.matplotlib_widget, 0, 2, 16, 1)
 
         knapsack_problem.setCentralWidget(self.central_widget)
         self.menu_bar = QtWidgets.QMenuBar(knapsack_problem)
@@ -265,39 +285,64 @@ class UiKnapsackProblem(QtWidgets.QWidget):
                 self.__show_warning__("Error", "Please provide capacity")
                 return
             iterations = self.iteration_edit.text()
-            if iterations:
-                iterations = int(iterations)
-            else:
-                iterations = None
+            iterations = int(iterations) if iterations else None
             source = self.source_edit.text()
-            if source:
-                source = [int(x) for x in list(source)]
-            else:
-                source = None
+            source = [int(x) for x in list(source)] if source else None
+            destination = self.destination_edit.text()
+            destination = int(destination) if destination else None
+            print(destination)
+
             if self.algo_combo_box.currentIndex() == 0:
-                knapsack = KP.KnapsackEvolutionary(int(self.capacity_edit.text()), self.items_list, iterations, source)
+                knapsack = KP.KnapsackEvolutionary(int(self.capacity_edit.text()),
+                                                   self.items_list,
+                                                   iterations=iterations,
+                                                   source=source,
+                                                   destination=destination)
             elif self.algo_combo_box.currentIndex() == 1:
-                knapsack = KPC.KnapsackEvolutionaryCrossover(int(self.capacity_edit.text()),
-                                                             self.items_list, iterations=iterations)
+                if self.population_edit.text():
+                    population = int(self.population_edit.text())
+                    knapsack = KPC.KnapsackEvolutionaryCrossover(int(self.capacity_edit.text()),
+                                                                 self.items_list,
+                                                                 iterations=iterations,
+                                                                 population=population,
+                                                                 destination=destination)
+                else:
+                    knapsack = KPC.KnapsackEvolutionaryCrossover(int(self.capacity_edit.text()),
+                                                                 self.items_list,
+                                                                 iterations=iterations,
+                                                                 destination=destination)
             generator = knapsack.evolve()
             n = []
             fit = []
             for i in generator:
                 n.append(i[0])
                 fit.append(i[1])
-            n = n[:-knapsack.no_change]
-            fit = fit[:-knapsack.no_change]
+                print(i)
+
+            if knapsack.no_change > 0 and not destination:
+                n = n[:-knapsack.no_change]
+                fit = fit[:-knapsack.no_change]
 
             self.matplotlib_widget.axis.clear()
             self.matplotlib_widget.axis.plot(n, fit)
             self.matplotlib_widget.axis.set_ylim([0, max(fit) + 1])
             self.matplotlib_widget.axis.grid(color='#AAAAAA', which='major', linestyle='-', linewidth=0.5)
-            self.matplotlib_widget.axis.set_xticks(np.arange(1, len(n), int(len(n)/10)))
+            self.matplotlib_widget.axis.set_xticks(np.arange(1, len(n), int(len(n)/10 if len(n) > 14 else 1)))
             self.matplotlib_widget.axis.set_yticks(list(set(fit)))
+            self.matplotlib_widget.axis.set_xlabel("Evolution")
+            self.matplotlib_widget.axis.set_ylabel("Value")
             self.matplotlib_widget.canvas.draw()
             self.__show_warning__("Finish", "Final chromosome is:\n%s" % (''.join([str(x) for x in knapsack.source])))
-        except Exception as e:
-            self.__show_warning__("Error", e.args[0])
+        except:
+            import linecache
+            exc_type, exc_obj, tb = sys.exc_info()
+            f = tb.tb_frame
+            lineno = tb.tb_lineno
+            filename = f.f_code.co_filename
+            linecache.checkcache(filename)
+            line = linecache.getline(filename, lineno, f.f_globals)
+            self.__show_warning__("Error", "Exception in file:\n%s\nLine number: %i\n%s\nException type: %s" %
+                                  (filename, lineno, line.strip(), exc_obj))
 
     def change_algorithm(self):
         combo_box = self.sender()
@@ -306,8 +351,11 @@ class UiKnapsackProblem(QtWidgets.QWidget):
         if index == 0:
             self.population_edit.setDisabled(True)
             self.population_edit.clear()
+            self.source_edit.setEnabled(True)
         elif index == 1:
             self.population_edit.setEnabled(True)
+            self.source_edit.setDisabled(True)
+            self.source_edit.clear()
 
     def remove_item(self):
         root = self.items_tree.invisibleRootItem()
@@ -354,7 +402,8 @@ class UiKnapsackProblem(QtWidgets.QWidget):
         self.remove_button.setText(_translate("KnapsackProblem", "Remove item"))
         self.value_label.setText(_translate("KnapsackProblem", "Value"))
         self.capacity_label.setText(_translate("KnapsackProblem", "Capacity"))
-        self.source_label.setText(_translate("KnapsackProblem", "Source chromosome"))
+        self.source_label.setText(_translate("KnapsackProblem", "Source DNA"))
+        self.destination_label.setText(_translate("KnapsackProblem", "Target"))
         self.file_menu.setTitle(_translate("KnapsackProblem", "File"))
         self.save_items_action.setText(_translate("KnapsackProblem", "Save items"))
         self.save_items_action.setShortcut(_translate("KnapsackProblem", "Ctrl+S"))
