@@ -129,7 +129,8 @@ class KnapsackEvolutionaryCrossover:
                 self.no_change = 0
             else:
                 self.no_change += 1
-            yield (n, genetic_pool[0]['fitness'])
+            average = float(sum([x['fitness'] for x in genetic_pool])) / len(genetic_pool)
+            yield (n, genetic_pool[0]['fitness'], average)
             # print("%5i | %5i" % (n, self.no_change))
             if (self.destination and genetic_pool[0]['fitness'] >= self.destination) or self.no_change >= 300:
                 self.source = genetic_pool[0]['dna']

@@ -214,6 +214,11 @@
     </item>
     <item row="11" column="0">
      <widget class="QLabel" name="population_label">
+      <property name="font">
+       <font>
+        <pointsize>7</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>Population</string>
       </property>
@@ -221,6 +226,11 @@
     </item>
     <item row="12" column="0">
      <widget class="QLabel" name="iteration_label">
+      <property name="font">
+       <font>
+        <pointsize>7</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>Iterations</string>
       </property>
@@ -285,6 +295,11 @@
         <width>50</width>
         <height>16777215</height>
        </size>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>7</pointsize>
+       </font>
       </property>
       <property name="text">
        <string>Source chromosome</string>

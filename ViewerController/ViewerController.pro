@@ -13,8 +13,13 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        knapsackproblem.cpp
+        knapsackproblem.cpp \
+    dialog.cpp
 
-HEADERS  += knapsackproblem.h
+HEADERS  += knapsackproblem.h \
+    dialog.h
 
-FORMS    += knapsackproblem.ui
+FORMS    += knapsackproblem.ui \
+    dialog.ui
+
+DISTFILES +=

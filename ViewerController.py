@@ -18,7 +18,9 @@ import types
 import KP
 import KPC
 
-DEBUG = True
+import dialog
+
+DEBUG = False
 
 
 def my_slot(*args):
@@ -63,7 +65,7 @@ class UiKnapsackProblem(QtWidgets.QWidget):
         self.items_list = []
         if DEBUG:
             from random import randint
-            self.items_list = [(randint(1, 15), randint(1, 20)) for _ in range(20)]
+            self.items_list = [(randint(1, 10), randint(1, 10)) for _ in range(200)]
 
     def setup_ui(self, knapsack_problem):
         knapsack_problem.setObjectName("KnapsackProblem")
@@ -290,7 +292,6 @@ class UiKnapsackProblem(QtWidgets.QWidget):
             source = [int(x) for x in list(source)] if source else None
             destination = self.destination_edit.text()
             destination = int(destination) if destination else None
-            print(destination)
 
             if self.algo_combo_box.currentIndex() == 0:
                 knapsack = KP.KnapsackEvolutionary(int(self.capacity_edit.text()),
@@ -314,17 +315,21 @@ class UiKnapsackProblem(QtWidgets.QWidget):
             generator = knapsack.evolve()
             n = []
             fit = []
+            avg = []
             for i in generator:
                 n.append(i[0])
                 fit.append(i[1])
-                print(i)
+                avg.append(i[2])
+            print(len(n), len(fit), len(avg))
 
-            if knapsack.no_change > 0 and not destination:
-                n = n[:-knapsack.no_change]
-                fit = fit[:-knapsack.no_change]
+            if knapsack.no_change > 1 and not destination:
+                n = n[:-knapsack.no_change+1]
+                fit = fit[:-knapsack.no_change+1]
+                avg = avg[:-knapsack.no_change+1]
 
             self.matplotlib_widget.axis.clear()
             self.matplotlib_widget.axis.plot(n, fit)
+            self.matplotlib_widget.axis.plot(n, avg)
             self.matplotlib_widget.axis.set_ylim([0, max(fit) + 1])
             self.matplotlib_widget.axis.grid(color='#AAAAAA', which='major', linestyle='-', linewidth=0.5)
             self.matplotlib_widget.axis.set_xticks(np.arange(1, len(n), int(len(n)/10 if len(n) > 14 else 1)))
@@ -332,7 +337,18 @@ class UiKnapsackProblem(QtWidgets.QWidget):
             self.matplotlib_widget.axis.set_xlabel("Evolution")
             self.matplotlib_widget.axis.set_ylabel("Value")
             self.matplotlib_widget.canvas.draw()
-            self.__show_warning__("Finish", "Final chromosome is:\n%s" % (''.join([str(x) for x in knapsack.source])))
+
+            src = knapsack.source
+            items = self.items_list
+            matrix = [src[i:i+3] for i in range(0, len(knapsack.source), 3)]
+            matrix_2 = [items[i:i+3] for i in range(0, len(items), 3)]
+
+            self.dialog = QtWidgets.QDialog()
+            d_ui = dialog.Ui_Dialog()
+            d_ui.setupUi(self.dialog, matrix, matrix_2)
+            self.dialog.show()
+            # self.__show_warning__("Finish", "Final chromosome is:\n%s" % (''.join([str(x) for x in knapsack.source])))
+
         except:
             import linecache
             exc_type, exc_obj, tb = sys.exc_info()
